@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Terrastack social preview</title>
+  <desc id="desc">Secure Next.js frontend with strong technical SEO and backend-ready integration.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="52%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#0891b2" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.18)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0.06)" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <g opacity="0.12" stroke="#d1fae5">
+    <path d="M0 96h1200M0 192h1200M0 288h1200M0 384h1200M0 480h1200M0 576h1200" />
+    <path d="M96 0v630M192 0v630M288 0v630M384 0v630M480 0v630M576 0v630M672 0v630M768 0v630M864 0v630M960 0v630M1056 0v630" />
+  </g>
+  <rect x="64" y="72" width="1072" height="486" rx="32" fill="url(#panel)" stroke="rgba(255,255,255,0.18)" />
+  <text x="112" y="148" fill="#a7f3d0" font-size="26" font-family="Trebuchet MS, Segoe UI, sans-serif" letter-spacing="6">SECURE BY DEFAULT</text>
+  <text x="112" y="258" fill="#ffffff" font-size="84" font-weight="700" font-family="Trebuchet MS, Segoe UI, sans-serif">Terrastack</text>
+  <text x="112" y="338" fill="#e2e8f0" font-size="34" font-family="Trebuchet MS, Segoe UI, sans-serif">Next.js frontend with strong technical SEO</text>
+  <text x="112" y="388" fill="#e2e8f0" font-size="34" font-family="Trebuchet MS, Segoe UI, sans-serif">and a backend-ready integration path.</text>
+  <g transform="translate(112 452)">
+    <rect width="252" height="56" rx="28" fill="rgba(15,23,42,0.44)" stroke="rgba(255,255,255,0.2)" />
+    <text x="28" y="37" fill="#ffffff" font-size="24" font-family="Trebuchet MS, Segoe UI, sans-serif">SSR</text>
+    <rect x="272" width="252" height="56" rx="28" fill="rgba(15,23,42,0.44)" stroke="rgba(255,255,255,0.2)" />
+    <text x="300" y="37" fill="#ffffff" font-size="24" font-family="Trebuchet MS, Segoe UI, sans-serif">Structured Data</text>
+    <rect x="544" width="300" height="56" rx="28" fill="rgba(15,23,42,0.44)" stroke="rgba(255,255,255,0.2)" />
+    <text x="572" y="37" fill="#ffffff" font-size="24" font-family="Trebuchet MS, Segoe UI, sans-serif">Backend-Ready</text>
+  </g>
+</svg>

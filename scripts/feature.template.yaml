@@ -1,0 +1,26 @@
+feature:
+  name: CustomerAccount
+  entity_name: CustomerAccount
+  dto_name: CustomerAccountDto
+  service_name: CustomerAccountService
+  interface_name: ICustomerAccountService
+  controller_name: CustomerAccountController
+  dbset_name: CustomerAccounts
+  route_segment: customer-account
+  timestamps: true
+  key:
+    name: id
+    type: int
+    required: true
+  fields:
+    - name: display_name
+      type: string
+      required: true
+      max_length: 100
+    - name: external_id
+      type: string
+      required: false
+      max_length: 100
+    - name: is_active
+      type: bool
+      required: true
