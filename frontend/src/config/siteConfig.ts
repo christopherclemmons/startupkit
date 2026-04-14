@@ -13,11 +13,22 @@ type RequiredEnvKey =
   | "VITE_FEATURE_2_TITLE"
   | "VITE_FEATURE_2_DESCRIPTION"
   | "VITE_FEATURE_3_TITLE"
-  | "VITE_FEATURE_3_DESCRIPTION";
+  | "VITE_FEATURE_3_DESCRIPTION"
+  | "VITE_FAQ_1_QUESTION"
+  | "VITE_FAQ_1_ANSWER"
+  | "VITE_FAQ_2_QUESTION"
+  | "VITE_FAQ_2_ANSWER"
+  | "VITE_FAQ_3_QUESTION"
+  | "VITE_FAQ_3_ANSWER";
 
 type FeatureItem = {
   title: string;
   description: string;
+};
+
+type FaqItem = {
+  question: string;
+  answer: string;
 };
 
 type SiteConfig = {
@@ -31,6 +42,7 @@ type SiteConfig = {
   sectionImageUrl: string;
   brandColor: string;
   features: FeatureItem[];
+  faqs: FaqItem[];
 };
 
 const readEnv = (key: RequiredEnvKey): string => {
@@ -67,6 +79,20 @@ export const siteConfig: SiteConfig = {
       description: readEnv("VITE_FEATURE_3_DESCRIPTION"),
     },
   ],
+  faqs: [
+    {
+      question: readEnv("VITE_FAQ_1_QUESTION"),
+      answer: readEnv("VITE_FAQ_1_ANSWER"),
+    },
+    {
+      question: readEnv("VITE_FAQ_2_QUESTION"),
+      answer: readEnv("VITE_FAQ_2_ANSWER"),
+    },
+    {
+      question: readEnv("VITE_FAQ_3_QUESTION"),
+      answer: readEnv("VITE_FAQ_3_ANSWER"),
+    },
+  ],
 };
 
-export type { FeatureItem, SiteConfig };
+export type { FeatureItem, FaqItem, SiteConfig };
