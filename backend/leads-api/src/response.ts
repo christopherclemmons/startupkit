@@ -3,8 +3,8 @@ import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 const responseHeaders = {
   "content-type": "application/json",
   "access-control-allow-origin": "*",
-  "access-control-allow-methods": "OPTIONS,POST",
-  "access-control-allow-headers": "content-type",
+  "access-control-allow-methods": "OPTIONS,GET,POST,PUT",
+  "access-control-allow-headers": "authorization,content-type",
 };
 
 export const jsonResponse = (

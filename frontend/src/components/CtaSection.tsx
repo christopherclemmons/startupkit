@@ -1,38 +1,30 @@
-import { SiteConfig } from "../config/siteConfig";
+import { SiteContent } from "../config/siteConfig";
 import { Reveal } from "./Reveal";
 
-type CtaSectionProps = {
-  config: SiteConfig;
-};
-
-export function CtaSection({ config }: CtaSectionProps) {
+export function CtaSection({ content }: { content: SiteContent }) {
   return (
     <Reveal className="space-y-4">
       <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">
-        Ready to launch
+        Ready to capture signal
       </p>
       <h2 className="max-w-xl text-3xl font-semibold tracking-tight md:text-4xl">
-        Turn {config.siteName} into a branded acquisition page with a separate
-        backend, separate data path, and reusable deployment pattern.
+        {content.site_name} runs on an isolated content record and backend path.
       </h2>
       <p className="max-w-xl text-slate-300">
-        The page content, API base URL, color, images, and business identity are
-        all driven by configuration so the next campaign is mostly variable
-        changes, not code edits.
+        Leads and content changes are tagged with this site’s environment and
+        source context so Business A and Business B never share content.
       </p>
       <div className="grid gap-3 pt-4 sm:grid-cols-3">
-        {[
-          "Fast launch",
-          "Config-first branding",
-          "Tagged lead capture",
-        ].map((item) => (
-          <div
-            key={item}
-            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-100"
-          >
-            {item}
-          </div>
-        ))}
+        {["Single-site content JSON", "Protected admin editing", "Tagged lead capture"].map(
+          (item) => (
+            <div
+              key={item}
+              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-100"
+            >
+              {item}
+            </div>
+          ),
+        )}
       </div>
     </Reveal>
   );

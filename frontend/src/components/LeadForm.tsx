@@ -1,10 +1,6 @@
 import { FormEvent, useState } from "react";
-import { SiteConfig } from "../config/siteConfig";
+import { SiteContent } from "../config/siteConfig";
 import { Reveal } from "./Reveal";
-
-type LeadFormProps = {
-  config: SiteConfig;
-};
 
 type FormState = {
   firstName: string;
@@ -29,7 +25,13 @@ const initialFormState: FormState = {
   companyWebsite: "",
 };
 
-export function LeadForm({ config }: LeadFormProps) {
+export function LeadForm({
+  content,
+  apiBaseUrl,
+}: {
+  content: SiteContent;
+  apiBaseUrl: string;
+}) {
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({
@@ -37,7 +39,7 @@ export function LeadForm({ config }: LeadFormProps) {
     message: null,
   });
 
-  const endpoint = `${config.apiBaseUrl.replace(/\/$/, "")}/leads`;
+  const endpoint = `${apiBaseUrl.replace(/\/$/, "")}/leads`;
 
   const updateField = (field: keyof FormState, value: string) => {
     setFormState((current) => ({
@@ -63,7 +65,7 @@ export function LeadForm({ config }: LeadFormProps) {
           email: formState.email,
           phone: formState.phone || undefined,
           business_interest: formState.businessInterest || undefined,
-          source_site: config.siteName,
+          source_site: content.source_site,
           honeypot: formState.companyWebsite || undefined,
         }),
       });
@@ -94,8 +96,8 @@ export function LeadForm({ config }: LeadFormProps) {
   return (
     <Reveal>
       <form
-        id="lead-form"
         className="space-y-4 rounded-[1.75rem] border border-white/10 bg-white p-6 text-slate-900 shadow-[0_24px_70px_rgba(15,23,42,0.18)] md:p-7"
+        id="lead-form"
         onSubmit={handleSubmit}
       >
         <div className="flex items-start justify-between gap-4">
@@ -104,11 +106,11 @@ export function LeadForm({ config }: LeadFormProps) {
               Lead capture
             </p>
             <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-              Send {config.siteName} a qualified inquiry.
+              Send {content.site_name} a qualified inquiry.
             </h3>
           </div>
           <span className="rounded-full bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
-            {config.envName}
+            {content.env_name}
           </span>
         </div>
 
@@ -130,8 +132,8 @@ export function LeadForm({ config }: LeadFormProps) {
               First name
             </label>
             <input
-              id="firstName"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+              id="firstName"
               name="firstName"
               onChange={(event) => updateField("firstName", event.target.value)}
               placeholder="Jordan"
@@ -145,8 +147,8 @@ export function LeadForm({ config }: LeadFormProps) {
               Last name
             </label>
             <input
-              id="lastName"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+              id="lastName"
               name="lastName"
               onChange={(event) => updateField("lastName", event.target.value)}
               placeholder="Lee"
@@ -163,8 +165,8 @@ export function LeadForm({ config }: LeadFormProps) {
             </label>
             <input
               required
-              id="email"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+              id="email"
               name="email"
               onChange={(event) => updateField("email", event.target.value)}
               placeholder="jordan@example.com"
@@ -178,8 +180,8 @@ export function LeadForm({ config }: LeadFormProps) {
               Phone
             </label>
             <input
-              id="phone"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+              id="phone"
               name="phone"
               onChange={(event) => updateField("phone", event.target.value)}
               placeholder="+1 555 123 4567"
@@ -197,8 +199,8 @@ export function LeadForm({ config }: LeadFormProps) {
             Business interest or message
           </label>
           <textarea
-            id="businessInterest"
             className="min-h-28 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+            id="businessInterest"
             name="businessInterest"
             onChange={(event) =>
               updateField("businessInterest", event.target.value)
@@ -208,7 +210,7 @@ export function LeadForm({ config }: LeadFormProps) {
           />
         </div>
 
-        <div className="hidden" aria-hidden="true">
+        <div aria-hidden="true" className="hidden">
           <label htmlFor="companyWebsite">Company website</label>
           <input
             id="companyWebsite"
@@ -225,12 +227,12 @@ export function LeadForm({ config }: LeadFormProps) {
           disabled={isSubmitting}
           type="submit"
         >
-          {isSubmitting ? "Submitting..." : config.ctaText}
+          {isSubmitting ? "Submitting..." : content.cta_text}
         </button>
 
         <p className="text-xs leading-6 text-slate-500">
-          Submissions are sent to the campaign API only. The browser never talks
-          to DynamoDB directly.
+          Submissions are tagged with this site context and sent through the API
+          only.
         </p>
       </form>
     </Reveal>

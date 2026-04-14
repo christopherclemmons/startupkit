@@ -1,102 +1,79 @@
 # StartupKit Landing Pages
 
-Reusable starter repository for launching branded market-research landing pages per business. Each deployment owns its own frontend configuration, API endpoint, Lambda function, and DynamoDB lead table while keeping the codebase reusable.
+Reusable starter for launching branded market-validation landing pages where each site keeps its own:
+
+- public landing page content
+- hidden admin login
+- protected admin editor route
+- API endpoint
+- tagged lead records
+- DynamoDB-backed site content document
+
+The public site has no visible admin links. The admin editor lives at `/admin` and is intended for one Cognito-managed email identity per deployment.
 
 ## Architecture
 
-- `frontend/`: Vite + React + TypeScript + Tailwind landing page
-- `backend/leads-api/`: TypeScript Lambda for `POST /leads`
-- `infra/`: Terraform root module for DynamoDB, Lambda, API Gateway, and Amplify
-- `infra/env/dev/`: environment entrypoint with business-specific variables
+- `frontend/`: Vite + React + TypeScript + Tailwind landing page and hidden admin editor
+- `backend/leads-api/`: TypeScript Lambda behind API Gateway
+- `infra/`: Terraform for DynamoDB, Lambda, API Gateway, Cognito, Amplify, and optional Route53 wiring
+- `infra/env/dev/`: example environment entrypoint
 
 Request flow:
 
-1. A visitor submits the lead form in the landing page.
-2. The frontend sends the payload to `POST /leads` on API Gateway.
-3. API Gateway invokes the Lambda function.
-4. Lambda validates the request, rejects spam honeypot submissions, tags the lead with business context, and stores it in DynamoDB.
+1. Public visitors load `GET /site-content`.
+2. The page renders the site-specific content document for that deployment.
+3. Lead submissions go to `POST /leads`.
+4. Lambda validates the payload and stores the lead in DynamoDB with `env_name`, `business_name`, and `source_site`.
+5. The hidden admin route uses Cognito-managed sign-in and calls `PUT /admin/site-content`.
+6. Lambda updates the same site’s content document in DynamoDB.
 
 The browser never talks directly to DynamoDB.
 
-## Repository Structure
+## Content Model
 
-```text
-.
-|-- frontend/
-|   |-- src/
-|   |   |-- components/
-|   |   `-- config/
-|-- backend/
-|   `-- leads-api/
-|       `-- src/
-`-- infra/
-    |-- env/
-    |   `-- dev/
-    `-- modules/
+The repo now treats landing page copy as a single JSON DTO. That keeps the data model consistent across sites and makes it easy to edit or duplicate.
+
+Current DTO shape:
+
+```json
+{
+  "site_name": "Northstar Market Intelligence",
+  "business_name": "Northstar Market Intelligence",
+  "env_name": "northstar-dev",
+  "source_site": "northstar.example.com",
+  "brand_color": "#0f766e",
+  "page_title": "Northstar Market Intelligence | Research Landing Page",
+  "meta_description": "Launch branded research landing pages quickly.",
+  "hero_title": "Pressure-test your next product idea",
+  "hero_subtitle": "Launch a focused research landing page.",
+  "cta_text": "Join the pilot list",
+  "hero_image_url": "https://example.com/hero.jpg",
+  "section_image_url": "https://example.com/section.jpg",
+  "features": [
+    { "id": "feature-1", "title": "Feature title", "description": "Feature body" }
+  ],
+  "faqs": [
+    { "id": "faq-1", "question": "Question?", "answer": "Answer." }
+  ]
+}
 ```
 
-## Frontend Configuration
+This document is:
 
-The landing page is environment-driven. Copy [frontend/.env.example](/C:/Users/chris/Documents/Business/software/startupkit/frontend/.env.example) to `frontend/.env.local` and set:
+- passed into the frontend as a default/fallback via `VITE_SITE_CONTENT_JSON`
+- used by Lambda as the default content when no saved record exists yet
+- saved per site through the admin route into DynamoDB
 
-- `VITE_SITE_NAME`
-- `VITE_HERO_TITLE`
-- `VITE_HERO_SUBTITLE`
-- `VITE_CTA_TEXT`
-- `VITE_API_BASE_URL`
-- `VITE_ENV_NAME`
-- `VITE_HERO_IMAGE_URL`
-- `VITE_SECTION_IMAGE_URL`
-- `VITE_BRAND_COLOR`
-- `VITE_FEATURE_1_TITLE`
-- `VITE_FEATURE_1_DESCRIPTION`
-- `VITE_FEATURE_2_TITLE`
-- `VITE_FEATURE_2_DESCRIPTION`
-- `VITE_FEATURE_3_TITLE`
-- `VITE_FEATURE_3_DESCRIPTION`
+## DynamoDB Records
 
-The typed config loader lives in [frontend/src/config/siteConfig.ts](/C:/Users/chris/Documents/Business/software/startupkit/frontend/src/config/siteConfig.ts).
+The table is shared by that deployment only and uses two record types.
 
-## Local Development
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Backend
-
-```bash
-cd backend/leads-api
-npm install
-npm run build
-```
-
-The Lambda build bundles the handler into `backend/leads-api/dist/handler.js`, which is the artifact Terraform packages.
-
-Local backend environment variables are documented in [backend/leads-api/.env.example](/C:/Users/chris/Documents/Business/software/startupkit/backend/leads-api/.env.example):
-
-- `LEADS_TABLE_NAME`
-- `ENV_NAME`
-- `BUSINESS_NAME`
-- `SOURCE_SITE`
-
-## What Is Implemented
-
-- Configurable landing page with hero, image, features, CTA, and lead form
-- Loading, success, and error states on the frontend form
-- Honeypot field for simple spam prevention
-- Lambda request validation and email normalization
-- DynamoDB persistence with tagged lead records
-- Terraform-managed DynamoDB table, Lambda, IAM, CloudWatch log group, HTTP API, and optional Amplify app/domain association
-
-Stored lead shape:
+Lead item:
 
 - `pk = LEAD#{email}`
 - `sk = {created_at}#{request_id}`
+- `entity_type = LEAD`
+- `site_pk = SITE#{env_name}`
 - `email`
 - `first_name`
 - `last_name`
@@ -107,11 +84,78 @@ Stored lead shape:
 - `source_site`
 - `created_at`
 
-## Terraform Deployment
+Site content item:
 
-The first environment entrypoint is [infra/env/dev](/C:/Users/chris/Documents/Business/software/startupkit/infra/env/dev).
+- `pk = SITE#{env_name}`
+- `sk = CONTENT#CURRENT`
+- `entity_type = SITE_CONTENT`
+- `site_name`
+- `business_name`
+- `env_name`
+- `source_site`
+- `content`
+- `content_version`
+- `created_at`
+- `updated_at`
+- `updated_by`
 
-1. Build the Lambda bundle first:
+That keeps Site A content separate from Site B content, even though both use the same repository pattern.
+
+## Hidden Admin Access
+
+The site exposes no public navigation to admin tools.
+
+- Hidden route: `/admin`
+- Auth provider: Cognito user pool per deployment
+- Intended admin identity: one email address configured with `admin_email`
+- Protected API route: `PUT /admin/site-content`
+
+The frontend uses Cognito’s managed login flow and stores the returned ID token in `sessionStorage` for the current browser session.
+
+## Local Development
+
+### Frontend
+
+Copy [frontend/.env.example](/C:/Users/chris/Documents/Business/software/startupkit/frontend/.env.example) to `frontend/.env.local`.
+
+Key frontend variables:
+
+- `VITE_API_BASE_URL`
+- `VITE_ENV_NAME`
+- `VITE_SITE_NAME`
+- `VITE_SITE_CONTENT_JSON`
+- `VITE_ADMIN_ROUTE_PATH`
+- `VITE_COGNITO_DOMAIN`
+- `VITE_COGNITO_CLIENT_ID`
+- `VITE_COGNITO_REDIRECT_URI`
+- `VITE_COGNITO_LOGOUT_URI`
+
+Run:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Public page: `http://localhost:5173/`
+
+Hidden admin route: `http://localhost:5173/admin`
+
+### Backend
+
+Backend env example: [backend/leads-api/.env.example](/C:/Users/chris/Documents/Business/software/startupkit/backend/leads-api/.env.example)
+
+Key backend variables:
+
+- `LEADS_TABLE_NAME`
+- `ENV_NAME`
+- `BUSINESS_NAME`
+- `SOURCE_SITE`
+- `ADMIN_EMAIL`
+- `DEFAULT_SITE_CONTENT_JSON`
+
+Run:
 
 ```bash
 cd backend/leads-api
@@ -119,9 +163,74 @@ npm install
 npm run build
 ```
 
-2. Edit [infra/env/dev/terraform.tfvars](/C:/Users/chris/Documents/Business/software/startupkit/infra/env/dev/terraform.tfvars). Terraform auto-loads this file, so `terraform plan` and `terraform apply` stop prompting for every required variable. A matching [infra/env/dev/terraform.tfvars.example](/C:/Users/chris/Documents/Business/software/startupkit/infra/env/dev/terraform.tfvars.example) is included as the reusable template.
+The Lambda bundle is emitted to `backend/leads-api/dist/handler.js`.
 
-3. Initialize and apply Terraform:
+## Terraform Deployment
+
+Primary example entrypoint: [infra/env/dev](/C:/Users/chris/Documents/Business/software/startupkit/infra/env/dev)
+
+### Main variables
+
+- `app_name`
+- `environment`
+- `business_name`
+- `admin_email`
+- `subdomain`
+- `root_domain`
+- `aws_region`
+- `site_content_json`
+- `admin_redirect_override_url`
+- `enable_amplify_app`
+- `amplify_branch_name`
+- `amplify_repository_url`
+- `enable_custom_domain`
+- `tags`
+
+### What Terraform creates
+
+- DynamoDB table for site data and leads
+- Lambda function for public/admin API actions
+- IAM role and DynamoDB permissions for Lambda
+- API Gateway HTTP API
+- Cognito user pool
+- Cognito app client
+- Cognito hosted domain
+- single Cognito user for the configured admin email
+- Amplify app and branch configuration
+- optional Route53 record for the site subdomain
+
+### Outputs
+
+- `api_url`
+- `amplify_app_id`
+- `amplify_default_domain`
+- `cognito_user_pool_id`
+- `cognito_user_pool_client_id`
+- `cognito_domain`
+- `dynamodb_table_name`
+- `custom_domain_url`
+
+### Deploy flow
+
+1. Build the Lambda bundle.
+
+```bash
+cd backend/leads-api
+npm install
+npm run build
+```
+
+2. Copy [infra/env/dev/terraform.tfvars.example](/C:/Users/chris/Documents/Business/software/startupkit/infra/env/dev/terraform.tfvars.example) to `infra/env/dev/terraform.tfvars`.
+
+3. Set the site-specific values:
+
+- business identity
+- admin email
+- custom domain/subdomain
+- callback/logout URLs for `/admin`
+- `site_content_json`
+
+4. Apply Terraform.
 
 ```bash
 cd infra/env/dev
@@ -130,84 +239,51 @@ terraform plan -out tfplan
 terraform apply tfplan
 ```
 
-Important manual values:
+### Important Cognito note
 
-- `enable_amplify_app`: leave as `true` to let Terraform create the Amplify app shell
-- `amplify_repository_url`: optional. Leave blank if you want to connect or manually deploy in the Amplify console later
-- `amplify_access_token`: required for Git-based Amplify providers that need a PAT
-- `root_domain`, `hosted_zone_id`, and `enable_custom_domain`: required only for custom domain provisioning. When enabled, Terraform creates the Amplify domain association and the Route53 CNAME for the business subdomain.
+This Terraform config derives the Cognito callback and logout URLs for the hidden admin route automatically.
 
-Key variables:
+- Local development always allows `http://localhost:5173/admin`.
+- Without a custom domain, the redirect target is `https://<amplify_branch_name>.<amplify_default_domain>/admin`.
+- With `enable_custom_domain = true`, the redirect target becomes `https://<subdomain>.<root_domain>/admin`.
+- If you need a bootstrap workaround, set `admin_redirect_override_url` to a fixed URL and Terraform will use that instead.
 
-- `app_name`
-- `environment`
-- `business_name`
-- `subdomain`
-- `root_domain`
-- `aws_region`
-- `hero_title`
-- `hero_subtitle`
-- `cta_text`
-- `hero_image_url`
-- `section_image_url`
-- `brand_color`
-- feature title and description variables
+If you deploy another business, give that deployment its own `admin_email`. The callback and logout URLs follow that deployment automatically.
 
-Outputs include:
-
-- `api_url`
-- `amplify_app_id`
-- `amplify_default_domain`
-- `dynamodb_table_name`
-- `custom_domain_url`
-
-## Example Deployment Flow
+## Business A / Business B Example
 
 Business A:
 
-1. Set `business_name = "Northstar Market Intelligence"`.
-2. Set `environment = "northstar-dev"`.
-3. Set `subdomain = "northstar"`.
-4. Set the landing page copy and images for Northstar.
-5. Build the Lambda and apply Terraform.
-6. If `amplify_repository_url = ""`, open Amplify in AWS Console, choose the created app, and use `Manual deploy` to upload the built `frontend/dist` bundle.
+- `environment = "business-a"`
+- `business_name = "Business A"`
+- `subdomain = "business-a"`
+- `site_content_json` contains Business A copy and questions
+- admin logs into `https://business-a.example.com/admin`
+- all saved content and leads are tagged with Business A context
 
 Business B:
 
-1. Copy the dev tfvars file.
-2. Change `business_name`, `environment`, `subdomain`, and branded content variables.
-3. Point Amplify env vars or branch settings at the new business values.
-4. Apply again into the target environment.
+- `environment = "business-b"`
+- `business_name = "Business B"`
+- `subdomain = "business-b"`
+- `site_content_json` contains Business B copy and questions
+- admin logs into `https://business-b.example.com/admin`
+- content does not overlap with Business A because the site key is different
 
-No frontend code rewrite should be required for the next business if the content model stays within the current config surface.
+No frontend code rewrite is required between those deployments if the DTO shape stays the same.
 
-## Quickest Test Path
+## API Summary
 
-Fastest local UI check:
+Public:
 
-1. Copy `frontend/.env.example` to `frontend/.env.local`.
-2. From `frontend/`, run `npm install` and `npm run dev`.
-3. Open the local Vite URL and verify the Northstar-branded page renders.
+- `GET /site-content`
+- `POST /leads`
 
-Fastest full-stack smoke test in AWS:
+Protected:
 
-1. From `backend/leads-api/`, run `npm install` and `npm run build`.
-2. Edit `infra/env/dev/terraform.tfvars`.
-3. If you want a manual Amplify workflow, keep `enable_amplify_app = true` and set `amplify_repository_url = ""`. Terraform will create the app, but it will not try to connect a repository.
-4. From `infra/env/dev/`, run `terraform init`, `terraform plan`, and `terraform apply`.
-5. Copy the `api_url` output.
-6. Set `VITE_API_BASE_URL` in `frontend/.env.local` to that `api_url`.
-7. Run `npm run dev` in `frontend/` and submit the form.
+- `PUT /admin/site-content`
 
-Manual Amplify console flow after Terraform apply:
-
-1. Open Amplify in the AWS console and select the app with the `amplify_app_id` output.
-2. Choose `Manual deploy`.
-3. Build the frontend locally from `frontend/` with `npm install` and `npm run build`.
-4. Upload the generated `frontend/dist` artifact in the console.
-5. In the Amplify app settings, add the same `VITE_*` environment variables Terraform uses if you later switch to branch-based builds.
-
-Fastest backend-only API test after Terraform apply:
+Example lead test:
 
 ```bash
 curl -X POST "$API_URL/leads" \
@@ -215,11 +291,16 @@ curl -X POST "$API_URL/leads" \
   -d "{\"first_name\":\"Chris\",\"email\":\"chris@example.com\",\"business_interest\":\"Testing the landing flow\"}"
 ```
 
-If the API is working, you should get a `201` response and the lead should be written to the DynamoDB table named in the Terraform outputs.
+## Validation Performed
 
-## Next Practical Work
+- `npm run build` in `backend/leads-api`
+- `npm run build` in `frontend`
+- `terraform -chdir=infra init -backend=false -input=false`
+- `terraform -chdir=infra validate`
 
-- add test coverage for frontend form behavior and backend validation paths
-- add prod environment entrypoint under `infra/env/prod`
-- decide whether to retire the older legacy `src/` and previous Terraform trees that still exist in the repository
-- add CI to build `frontend/` and `backend/leads-api/` before infrastructure deployment
+## Practical Notes
+
+- The hidden admin route is implemented client-side and intentionally not linked from the public page.
+- The API falls back to `DEFAULT_SITE_CONTENT_JSON` until you save site content through the admin route for the first time.
+- After the first admin save, the live site content comes from DynamoDB for that site.
+- Existing unrelated repo folders were left alone unless needed for this flow.
