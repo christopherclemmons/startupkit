@@ -1,0 +1,29 @@
+module "landing_page" {
+  source = "../.."
+
+  app_name               = var.app_name
+  environment            = var.environment
+  business_name          = var.business_name
+  subdomain              = var.subdomain
+  root_domain            = var.root_domain
+  aws_region             = var.aws_region
+  hero_title             = var.hero_title
+  hero_subtitle          = var.hero_subtitle
+  cta_text               = var.cta_text
+  hero_image_url         = var.hero_image_url
+  section_image_url      = var.section_image_url
+  brand_color            = var.brand_color
+  feature_1_title        = var.feature_1_title
+  feature_1_description  = var.feature_1_description
+  feature_2_title        = var.feature_2_title
+  feature_2_description  = var.feature_2_description
+  feature_3_title        = var.feature_3_title
+  feature_3_description  = var.feature_3_description
+  amplify_repository_url = var.amplify_repository_url
+  amplify_access_token   = var.amplify_access_token
+  amplify_branch_name    = var.amplify_branch_name
+  enable_custom_domain   = var.enable_custom_domain
+  hosted_zone_id         = var.hosted_zone_id
+  frontend_build_spec    = var.frontend_build_spec
+  tags                   = var.tags
+}

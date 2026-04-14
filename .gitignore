@@ -59,13 +59,12 @@ Thumbs.db
 
 # Docker
 .dockerignore
-!src/frontend/.dockerignore
 
 # Terraform
 *.tfstate
 *.tfstate.*
 .terraform/
-.terraform.lock.hcl
+infra/.terraform-build/
 
 # Logs
 logs/

@@ -1,0 +1,31 @@
+app_name      = "startupkit-landing"
+environment   = "northstar-dev"
+business_name = "Northstar Market Intelligence"
+subdomain     = "northstar"
+root_domain   = "example.com"
+aws_region    = "us-east-1"
+
+hero_title        = "Pressure-test your next product idea with qualified operator feedback"
+hero_subtitle     = "Launch a branded research page, route submissions through a dedicated API, and measure which market message converts."
+cta_text          = "Join the pilot list"
+hero_image_url    = "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80"
+section_image_url = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80"
+brand_color       = "#0f766e"
+
+feature_1_title       = "Audience signal capture"
+feature_1_description = "Validate whether founders, operators, and analysts respond to one clear market-research offer."
+feature_2_title       = "Dedicated lead pipeline"
+feature_2_description = "Each deployment writes to its own DynamoDB table and tags leads with business and environment context."
+feature_3_title       = "Reusable campaign system"
+feature_3_description = "Launch the next business faster by changing variables instead of rebuilding the stack."
+
+amplify_repository_url = "https://github.com/christopherclemmons/startupkit.git"
+amplify_access_token   = ""
+amplify_branch_name    = "main"
+enable_custom_domain   = false
+hosted_zone_id         = ""
+
+tags = {
+  project = "startupkit"
+  owner   = "marketing"
+}
