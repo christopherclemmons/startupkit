@@ -65,6 +65,8 @@ Thumbs.db
 *.tfstate.*
 .terraform/
 infra/.terraform-build/
+*.tfvars
+*.tfvars.json
 
 # Logs
 logs/

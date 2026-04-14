@@ -5,12 +5,12 @@ output "api_url" {
 
 output "amplify_app_id" {
   description = "Amplify app ID when Amplify is enabled."
-  value       = local.amplify_enabled ? aws_amplify_app.frontend[0].id : null
+  value       = local.amplify_app_enabled ? aws_amplify_app.frontend[0].id : null
 }
 
 output "amplify_default_domain" {
   description = "Amplify default domain when Amplify is enabled."
-  value       = local.amplify_enabled ? aws_amplify_app.frontend[0].default_domain : null
+  value       = local.amplify_app_enabled ? aws_amplify_app.frontend[0].default_domain : null
 }
 
 output "dynamodb_table_name" {

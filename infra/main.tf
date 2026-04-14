@@ -18,8 +18,8 @@ provider "aws" {
 }
 
 locals {
-  sanitized_app_name = replace(lower(var.app_name), "/[^a-z0-9-]/", "-")
-  sanitized_env_name = replace(lower(var.environment), "/[^a-z0-9-]/", "-")
+  sanitized_app_name = replace(replace(replace(lower(var.app_name), " ", "-"), "_", "-"), ".", "-")
+  sanitized_env_name = replace(replace(replace(lower(var.environment), " ", "-"), "_", "-"), ".", "-")
   name_prefix        = trimsuffix("${local.sanitized_app_name}-${local.sanitized_env_name}", "-")
   api_name           = "${local.name_prefix}-leads-api"
   table_name         = "${local.name_prefix}-leads"
@@ -35,8 +35,9 @@ locals {
     var.tags,
   )
 
-  amplify_enabled       = var.amplify_repository_url != ""
-  custom_domain_enabled = local.amplify_enabled && var.enable_custom_domain && var.root_domain != "" && var.hosted_zone_id != ""
+  amplify_app_enabled        = var.enable_amplify_app
+  amplify_repository_enabled = local.amplify_app_enabled && var.amplify_repository_url != ""
+  custom_domain_enabled      = local.amplify_repository_enabled && var.enable_custom_domain && var.root_domain != "" && var.hosted_zone_id != ""
 
   amplify_build_spec = var.frontend_build_spec != "" ? var.frontend_build_spec : <<-EOT
     version: 1
@@ -122,8 +123,8 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action = ["dynamodb:PutItem"]
-        Effect = "Allow"
+        Action   = ["dynamodb:PutItem"]
+        Effect   = "Allow"
         Resource = aws_dynamodb_table.leads.arn
       }
     ]
@@ -202,11 +203,11 @@ resource "aws_lambda_permission" "allow_api_gateway" {
 }
 
 resource "aws_amplify_app" "frontend" {
-  count = local.amplify_enabled ? 1 : 0
+  count = local.amplify_app_enabled ? 1 : 0
 
   name         = local.name_prefix
-  repository   = var.amplify_repository_url
-  access_token = var.amplify_access_token != "" ? var.amplify_access_token : null
+  repository   = local.amplify_repository_enabled ? var.amplify_repository_url : null
+  access_token = local.amplify_repository_enabled && var.amplify_access_token != "" ? var.amplify_access_token : null
   platform     = "WEB"
   build_spec   = local.amplify_build_spec
 
@@ -233,7 +234,7 @@ resource "aws_amplify_app" "frontend" {
 }
 
 resource "aws_amplify_branch" "frontend" {
-  count = local.amplify_enabled ? 1 : 0
+  count = local.amplify_repository_enabled ? 1 : 0
 
   app_id            = aws_amplify_app.frontend[0].id
   branch_name       = var.amplify_branch_name
@@ -270,4 +271,20 @@ resource "aws_amplify_domain_association" "custom_domain" {
     branch_name = aws_amplify_branch.frontend[0].branch_name
     prefix      = var.subdomain
   }
+}
+
+resource "aws_route53_record" "amplify_subdomain" {
+  count = local.custom_domain_enabled ? 1 : 0
+
+  zone_id = var.hosted_zone_id
+  name    = local.site_domain
+  type    = "CNAME"
+  ttl     = 300
+  records = [
+    one([
+      for subdomain in aws_amplify_domain_association.custom_domain[0].sub_domain :
+      subdomain.dns_record
+      if subdomain.prefix == var.subdomain
+    ])
+  ]
 }

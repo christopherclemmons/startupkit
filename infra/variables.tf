@@ -67,9 +67,15 @@ variable "feature_3_title" { type = string }
 variable "feature_3_description" { type = string }
 
 variable "amplify_repository_url" {
-  description = "Repository URL connected to Amplify. Leave blank to skip app creation."
+  description = "Repository URL connected to Amplify. Leave blank to create an Amplify app without a Git connection."
   type        = string
   default     = ""
+}
+
+variable "enable_amplify_app" {
+  description = "Whether to create the Amplify app resource. When true and amplify_repository_url is blank, deploy the app manually from the Amplify console."
+  type        = bool
+  default     = true
 }
 
 variable "amplify_access_token" {

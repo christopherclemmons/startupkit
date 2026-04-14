@@ -19,6 +19,10 @@ variable "feature_2_title" { type = string }
 variable "feature_2_description" { type = string }
 variable "feature_3_title" { type = string }
 variable "feature_3_description" { type = string }
+variable "enable_amplify_app" {
+  type    = bool
+  default = true
+}
 variable "amplify_repository_url" {
   type    = string
   default = ""

@@ -19,6 +19,7 @@ module "landing_page" {
   feature_2_description  = var.feature_2_description
   feature_3_title        = var.feature_3_title
   feature_3_description  = var.feature_3_description
+  enable_amplify_app     = var.enable_amplify_app
   amplify_repository_url = var.amplify_repository_url
   amplify_access_token   = var.amplify_access_token
   amplify_branch_name    = var.amplify_branch_name

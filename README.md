@@ -1,6 +1,6 @@
 # StartupKit Landing Pages
 
-Reusable starter repository for launching branded market-research landing pages per business. Each deployment is intended to own its own frontend configuration, API endpoint, Lambda function, and DynamoDB lead table while keeping the codebase reusable.
+Reusable starter repository for launching branded market-research landing pages per business. Each deployment owns its own frontend configuration, API endpoint, Lambda function, and DynamoDB lead table while keeping the codebase reusable.
 
 ## Architecture
 
@@ -119,7 +119,7 @@ npm install
 npm run build
 ```
 
-2. Populate a tfvars file from [infra/env/dev/terraform.tfvars.example](/C:/Users/chris/Documents/Business/software/startupkit/infra/env/dev/terraform.tfvars.example). The example is prefilled for `Northstar Market Intelligence` and already points at `https://github.com/christopherclemmons/startupkit.git`.
+2. Edit [infra/env/dev/terraform.tfvars](/C:/Users/chris/Documents/Business/software/startupkit/infra/env/dev/terraform.tfvars). Terraform auto-loads this file, so `terraform plan` and `terraform apply` stop prompting for every required variable. A matching [infra/env/dev/terraform.tfvars.example](/C:/Users/chris/Documents/Business/software/startupkit/infra/env/dev/terraform.tfvars.example) is included as the reusable template.
 
 3. Initialize and apply Terraform:
 
@@ -132,9 +132,10 @@ terraform apply tfplan
 
 Important manual values:
 
-- `amplify_repository_url`: required if you want Terraform to create Amplify
+- `enable_amplify_app`: leave as `true` to let Terraform create the Amplify app shell
+- `amplify_repository_url`: optional. Leave blank if you want to connect or manually deploy in the Amplify console later
 - `amplify_access_token`: required for Git-based Amplify providers that need a PAT
-- `root_domain`, `hosted_zone_id`, and `enable_custom_domain`: required only for custom domain association
+- `root_domain`, `hosted_zone_id`, and `enable_custom_domain`: required only for custom domain provisioning. When enabled, Terraform creates the Amplify domain association and the Route53 CNAME for the business subdomain.
 
 Key variables:
 
@@ -169,6 +170,7 @@ Business A:
 3. Set `subdomain = "northstar"`.
 4. Set the landing page copy and images for Northstar.
 5. Build the Lambda and apply Terraform.
+6. If `amplify_repository_url = ""`, open Amplify in AWS Console, choose the created app, and use `Manual deploy` to upload the built `frontend/dist` bundle.
 
 Business B:
 
@@ -190,12 +192,20 @@ Fastest local UI check:
 Fastest full-stack smoke test in AWS:
 
 1. From `backend/leads-api/`, run `npm install` and `npm run build`.
-2. Copy `infra/env/dev/terraform.tfvars.example` to `infra/env/dev/terraform.tfvars`.
-3. Set a real `amplify_access_token` if you want Amplify created automatically. If you want the quickest backend-only test, leave Amplify enabled only after you have that token.
+2. Edit `infra/env/dev/terraform.tfvars`.
+3. If you want a manual Amplify workflow, keep `enable_amplify_app = true` and set `amplify_repository_url = ""`. Terraform will create the app, but it will not try to connect a repository.
 4. From `infra/env/dev/`, run `terraform init`, `terraform plan`, and `terraform apply`.
 5. Copy the `api_url` output.
 6. Set `VITE_API_BASE_URL` in `frontend/.env.local` to that `api_url`.
 7. Run `npm run dev` in `frontend/` and submit the form.
+
+Manual Amplify console flow after Terraform apply:
+
+1. Open Amplify in the AWS console and select the app with the `amplify_app_id` output.
+2. Choose `Manual deploy`.
+3. Build the frontend locally from `frontend/` with `npm install` and `npm run build`.
+4. Upload the generated `frontend/dist` artifact in the console.
+5. In the Amplify app settings, add the same `VITE_*` environment variables Terraform uses if you later switch to branch-based builds.
 
 Fastest backend-only API test after Terraform apply:
 
